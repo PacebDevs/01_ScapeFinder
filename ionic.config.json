@@ -1,0 +1,7 @@
+{
+  "name": "01_ScapeFinder",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular"
+}
