@@ -22,7 +22,7 @@ serve(async (req) => {
     }
 
     const { data, error } = await supabase
-      .from("escape_rooms")
+      .from("salas")
       .select("*")
       .eq("categoria", category);
 
