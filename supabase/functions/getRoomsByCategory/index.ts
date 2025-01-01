@@ -6,22 +6,38 @@ const supabaseKey = Deno.env.get("SUPABASE_ANON_KEY")!;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 serve(async (req) => {
-  try {
-    // Log the raw body for debugging
-    const rawBody = await req.text();
-    console.log("Raw body:", rawBody);
-    console.log("Request method:", req.method); // Debe ser "POST"
-    console.log("Request headers:", req.headers); // Verifica que incluye Content-Type: application/json
-    console.log("Raw body:", await req.text()); // Verifica el cuerpo crudo
+  // Manejar preflight requests para CORS
+  if (req.method === "OPTIONS") {
+    return new Response(null, {
+      status: 204,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type",
+      },
+    });
+  }
 
-    // Attempt to parse the JSON body
+  try {
+    const rawBody = await req.text();
+    if (!rawBody) {
+      return new Response(JSON.stringify({ error: "Request body is empty" }), {
+        status: 400,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+        },
+      });
+    }
+
     const { category } = JSON.parse(rawBody);
 
     if (!category) {
-      return new Response(
-        JSON.stringify({ error: "Missing category" }),
-        { status: 400 }
-      );
+      return new Response(JSON.stringify({ error: "Missing 'category' field" }), {
+        status: 400,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+        },
+      });
     }
 
     const { data, error } = await supabase
@@ -30,21 +46,27 @@ serve(async (req) => {
       .eq("categoria", category);
 
     if (error) {
-      return new Response(
-        JSON.stringify({ error: error.message }),
-        { status: 500 }
-      );
+      return new Response(JSON.stringify({ error: error.message }), {
+        status: 500,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+        },
+      });
     }
 
-    return new Response(JSON.stringify(data), { status: 200 });
+    return new Response(JSON.stringify(data), {
+      status: 200,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+      },
+    });
   } catch (err) {
-    const errorMessage =
-      err instanceof Error ? err.message : "Unknown error occurred";
-    console.error("Error parsing JSON:", errorMessage);
-
-    return new Response(
-      JSON.stringify({ error: "Invalid JSON format or empty body" }),
-      { status: 400 }
-    );
+    const errorMessage = err instanceof Error ? err.message : "Unknown error occurred";
+    return new Response(JSON.stringify({ error: errorMessage }), {
+      status: 500,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+      },
+    });
   }
 });
