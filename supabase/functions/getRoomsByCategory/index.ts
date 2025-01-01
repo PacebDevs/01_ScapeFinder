@@ -10,6 +10,9 @@ serve(async (req) => {
     // Log the raw body for debugging
     const rawBody = await req.text();
     console.log("Raw body:", rawBody);
+    console.log("Request method:", req.method); // Debe ser "POST"
+    console.log("Request headers:", req.headers); // Verifica que incluye Content-Type: application/json
+    console.log("Raw body:", await req.text()); // Verifica el cuerpo crudo
 
     // Attempt to parse the JSON body
     const { category } = JSON.parse(rawBody);
